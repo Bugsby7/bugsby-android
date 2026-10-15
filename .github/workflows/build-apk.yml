@@ -28,41 +28,55 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Generate Release Keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore app/release.keystore \
+            -alias bugsby \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass bugsby123 \
+            -keypass bugsby123 \
+            -dname "CN=Bugsby, OU=Companion, O=Bugsby, L=Android, S=Global, C=US"
+
+      - name: Build Signed Release and Debug APKs
+        run: ./gradlew assembleRelease assembleDebug --stacktrace
+
+      - name: Prepare APK Deliverables
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/Bugsby.apk
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Bugsby-debug.apk
+          ls -la dist/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Bugsby-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: Bugsby-APKs
+          path: dist/*.apk
 
       - name: Release APK
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.0.0
-          name: Bugsby v1.0.0 (Phase 1 APK)
+          tag_name: v1.0.1
+          name: Bugsby v1.0.1 (Signed Release APK)
           draft: false
           prerelease: false
           body: |
-            ## 🥷 Bugsby AI Companion - Phase 1 Build
-            
-            Installable APK for your Android phone!
-            
-            ### ✨ Features Included:
-            - **Floating 2D Ninja Overlay** (`SYSTEM_ALERT_WINDOW`): Floats over your phone's apps, fully draggable.
-            - **Idle Hide-in-Shadows**: Automatically tucks into the screen edge and dims to 35% opacity after 10s of inactivity. Wakes immediately on tap!
-            - **Super Saiyan Evolve Mode**: Say **"evolve"** or tap the bolt icon on Bugsby's menu to trigger a full Super Saiyan transformation with golden blazing aura, electric lightning arcs, glowing eyes, and 3D illuminated depth! Say **"normal"** to return to base ninja form.
-            - **Smooth Expressions & Animations**: Breathing bob, idle blinking, and reaction states.
-            - **Voice & Brain Router**: Voice commands to open apps, search the web, play music on YouTube/Spotify, toggle flashlight, and optional Gemini AI free cloud chat.
-            
-            ### 📲 How to Install on your Android Phone:
-            1. Download the `app-debug.apk` attached below.
-            2. When opening, if Android asks, tap **Settings** -> **Allow from this source**.
-            3. Tap **Install**.
-            4. Open **Bugsby**, tap **Grant** for *Display over other apps* and *Microphone*.
-            5. Tap **Start Bugsby**!
-          files: app/build/outputs/apk/debug/*.apk
+            ## 🥷 Bugsby AI Companion - v1.0.1 Signed Release
+
+            Fully signed APK (with both v1 JAR signature and v2 full-APK signature) for installation on all Android devices.
+
+            ### 📦 Download:
+            - **Primary (Recommended)**: `Bugsby.apk` (Signed Release Build)
+            - **Debug alternative**: `Bugsby-debug.apk`
+
+            ### ⚠️ Important Note If Package Installer Closes on Tap:
+            1. **Stop Screen Recording**: If you are recording your screen (or have a floating recorder button active), Android's tapjacking protection (`filterTouchesWhenObscured`) intentionally blocks or dismisses the "Install" button to prevent screen capture tapjacking. **Pause or stop screen recording before tapping Install.**
+            2. **Turn off screen dimmers / blue-light filters**: Night shift or screen tint apps overlaying the display will trigger the same security block.
+            3. Tap `Bugsby.apk`, tap **Install**, and launch your ninja companion!
+          files: dist/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
