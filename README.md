@@ -1,73 +1,90 @@
-# 🥷 Bugsby - Floating AI Ninja Companion for Android
+name: Build Bugsby APK
 
-[![Download Latest APK](https://img.shields.io/badge/Download-Bugsby.apk_(v1.0.2)-4CAF50?style=for-the-badge&logo=android)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby.apk)
-[![Download Debug APK](https://img.shields.io/badge/Download-Bugsby--debug.apk-blue?style=for-the-badge&logo=android)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby-debug.apk)
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
----
+permissions:
+  contents: write
 
-### 📥 Direct Download Links (v1.0.2)
-- **[👉 Download Bugsby.apk (Recommended Signed Release)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby.apk)** (~10 MB)
-- **[👉 Download Bugsby-debug.apk (Debug Build)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby-debug.apk)** (~15 MB)
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
----
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-# 🥷 Bugsby - Floating AI Ninja Companion for Android
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-Bugsby is an intelligent, floating 2D ninja AI companion designed for Android. He floats across your screen as an interactive overlay, reacts with animated expressions, responds to voice commands, and can transform into **Super Saiyan 3D mode** with blazing energy auras!
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-![Bugsby Reference](https://raw.githubusercontent.com/Bugsby7/bugsby-android/main/art/reference.jpg)
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
----
+      - name: Generate Keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore app/release.keystore \
+            -alias bugsby \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass bugsby123 \
+            -keypass bugsby123 \
+            -dname "CN=Bugsby, OU=Companion, O=Bugsby, L=Android, S=Global, C=US"
 
-## ✨ Features (Phase 1)
+      - name: Build APKs
+        run: ./gradlew assembleRelease assembleDebug --stacktrace
 
-1. **Floating Draggable Ninja Overlay (`SYSTEM_ALERT_WINDOW`)**
-   - Lives as a persistent floating overlay on top of any active Android app.
-   - Smooth drag tracking with magnetic edge-snapping to screen borders.
-2. **Idle Hide-in-Shadows**
-   - After 10 seconds of no interaction, Bugsby tucks into the nearest screen edge and fades to 35% opacity (ninja stealth mode).
-   - Wakes up immediately upon touch.
-3. **⚡ Super Saiyan Evolve Mode**
-   - **Voice Command:** Say *"Evolve"*, *"Super Saiyan"*, or *"Power Up"* to trigger a dramatic transformation!
-   - **Quick Toggle:** Tap Bugsby to reveal the radial menu and tap the lightning bolt icon.
-   - **Visual Effects:** Golden radial aura, crackling cyan electric arcs, glowing energy eyes, and 3D illuminated rim lighting.
-   - Say *"Normal"* to return to the calm, fluffy 2D ninja form.
-4. **Animated Expressions**
-   - Idle breathing bob and natural periodic blinking.
-   - Mood states: Happy (`^ ^`), Thinking, Focused, Excited, and Sleepy.
-5. **Hybrid Brain & Phone Control**
-   - **Offline / Local Intents:**
-     - `"Open [app name]"` (launches any installed app)
-     - `"Search [query]"` (Google search)
-     - `"Play [song]"` (YouTube / Spotify deep link)
-     - `"Turn on flashlight"`, `"Alarm"`
-   - **Free Cloud AI Brain:**
-     - Supports free Google Gemini 1.5 Flash API key in Settings for warm, witty ninja conversations.
-6. **Adaptive Voice**
-   - Speech-to-text voice recognition.
-   - Text-to-speech with adaptive pitch (energetic and higher pitch during Super Saiyan mode, stealth tone in normal mode).
+      - name: Prepare APK Deliverables
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/Bugsby.apk
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Bugsby-debug.apk
+          ls -lh dist/
 
----
+      - name: Verify APK Signatures (no re-signing)
+        run: |
+          BUILD_TOOLS_DIR=$(find $ANDROID_HOME/build-tools -mindepth 1 -maxdepth 1 | sort -V | tail -n 1)
+          echo "Using apksigner from $BUILD_TOOLS_DIR"
+          echo "=== Verifying Bugsby.apk ==="
+          $BUILD_TOOLS_DIR/apksigner verify --verbose dist/Bugsby.apk
+          echo "=== Verifying Bugsby-debug.apk ==="
+          $BUILD_TOOLS_DIR/apksigner verify --verbose dist/Bugsby-debug.apk || true
 
-## 📲 How to Download & Install the APK on Your Phone
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bugsby-APKs
+          path: dist/*.apk
 
-You don't need a laptop or computer! You can do everything right from your Android phone:
+      - name: Release APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/heads/main')
+        with:
+          tag_name: v1.0.3
+          name: Bugsby v1.0.3 (Clean Signed APK)
+          draft: false
+          prerelease: false
+          body: |
+            ## 🥷 Bugsby AI Companion - v1.0.3
 
-1. Go to the [Bugsby GitHub Releases page](https://github.com/Bugsby7/bugsby-android/releases).
-2. Tap on the latest release (`v1.0.0`) and download **`app-debug.apk`**.
-3. In your phone's notification panel or Files app, tap the downloaded `.apk` file.
-4. If Android displays *"For your security, your phone is not allowed to install unknown apps from this source"*:
-   - Tap **Settings**.
-   - Turn **ON** *"Allow from this source"*.
-   - Tap **Back** and tap **Install**.
-5. Launch **Bugsby** from your app drawer.
-6. On the onboarding screen:
-   - Tap **Grant** for **Display over other apps** (enables the floating ninja).
-   - Tap **Grant** for **Microphone** (enables voice commands).
-7. Tap **Start Bugsby** and enjoy your floating ninja companion!
+            Clean build. Gradle does the only signing (v1 + v2). No extra re-sign step.
 
----
+            ### 📦 Download
+            - **Bugsby.apk** (release)
+            - **Bugsby-debug.apk** (debug)
 
-## 🛠️ Automated Cloud Builds (GitHub Actions)
-
-Every time code is updated, GitHub Actions automatically compiles the latest code into an installable Android APK and publishes it to the Releases tab.
+            ### Install
+            1. Download Bugsby.apk
+            2. Open with Files app → Install
+          files: dist/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
