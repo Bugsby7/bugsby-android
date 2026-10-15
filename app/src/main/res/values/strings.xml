@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Bugsby</string>
+    <string name="channel_name">Bugsby Companion Service</string>
+    <string name="channel_desc">Persistent overlay service for Bugsby AI Companion</string>
+    <string name="notification_title">Bugsby is Active 🥷</string>
+    <string name="notification_text">Bugsby is floating on your screen. Tap to interact.</string>
+</resources>

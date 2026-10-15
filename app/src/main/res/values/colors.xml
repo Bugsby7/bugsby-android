@@ -1,0 +1,8 @@
+<resources>
+    <color name="ninja_black">#121212</color>
+    <color name="ninja_fur">#1C1B1F</color>
+    <color name="ninja_eyes">#000000</color>
+    <color name="super_saiyan_gold">#FFD700</color>
+    <color name="super_saiyan_aura">#FFAA00</color>
+    <color name="super_saiyan_electric">#00E5FF</color>
+</resources>
