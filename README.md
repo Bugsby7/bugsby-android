@@ -1,5 +1,18 @@
 # 🥷 Bugsby - Floating AI Ninja Companion for Android
 
+[![Download Latest APK](https://img.shields.io/badge/Download-Bugsby.apk_(v1.0.2)-4CAF50?style=for-the-badge&logo=android)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby.apk)
+[![Download Debug APK](https://img.shields.io/badge/Download-Bugsby--debug.apk-blue?style=for-the-badge&logo=android)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby-debug.apk)
+
+---
+
+### 📥 Direct Download Links (v1.0.2)
+- **[👉 Download Bugsby.apk (Recommended Signed Release)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby.apk)** (~10 MB)
+- **[👉 Download Bugsby-debug.apk (Debug Build)](https://github.com/Bugsby7/bugsby-android/releases/download/v1.0.2/Bugsby-debug.apk)** (~15 MB)
+
+---
+
+# 🥷 Bugsby - Floating AI Ninja Companion for Android
+
 Bugsby is an intelligent, floating 2D ninja AI companion designed for Android. He floats across your screen as an interactive overlay, reacts with animated expressions, responds to voice commands, and can transform into **Super Saiyan 3D mode** with blazing energy auras!
 
 ![Bugsby Reference](https://raw.githubusercontent.com/Bugsby7/bugsby-android/main/art/reference.jpg)
