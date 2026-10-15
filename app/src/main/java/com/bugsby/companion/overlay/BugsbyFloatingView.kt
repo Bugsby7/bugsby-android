@@ -229,7 +229,7 @@ class BugsbyFloatingView(
     }
 
     private fun handleUserVoiceInput(text: String) {
-        speechBubbleText.value = "\""$text\"""
+        speechBubbleText.value = "\"$text\""
         expressionState.value = Expression.THINKING
 
         coroutineScope.launch {
@@ -280,7 +280,7 @@ class BugsbyFloatingView(
                     layoutParams.y = initialY + dy
                     try {
                         windowManager.updateViewLayout(this, layoutParams)
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
                 return true
             }
@@ -317,7 +317,7 @@ class BugsbyFloatingView(
             layoutParams.x = anim.animatedValue as Int
             try {
                 windowManager.updateViewLayout(this@BugsbyFloatingView, layoutParams)
-            } catch (_: Exception) {}
+            } catch (e: Exception) {}
         }
         animator.start()
     }
@@ -327,6 +327,6 @@ class BugsbyFloatingView(
         voiceManager?.destroy()
         try {
             windowManager.removeView(this)
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 }
