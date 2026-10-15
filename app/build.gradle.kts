@@ -22,16 +22,16 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            v1SigningEnabled = true
-            v2SigningEnabled = true
+            enableV1Signing = true
+            enableV2Signing = true
         }
         create("release") {
             storeFile = file("release.keystore")
             storePassword = "bugsby123"
             keyAlias = "bugsby"
             keyPassword = "bugsby123"
-            v1SigningEnabled = true
-            v2SigningEnabled = true
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 

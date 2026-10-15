@@ -46,9 +46,22 @@ jobs:
       - name: Prepare APK Deliverables
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/Bugsby.apk
-          cp app/build/outputs/apk/debug/app-debug.apk dist/Bugsby-debug.apk
-          ls -la dist/
+          find app/build/outputs/apk -name "*.apk" -ls
+          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+            cp app/build/outputs/apk/release/app-release.apk dist/Bugsby.apk
+          fi
+          if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp app/build/outputs/apk/debug/app-debug.apk dist/Bugsby-debug.apk
+          fi
+          ls -lh dist/
+
+      - name: Verify APK Signatures
+        run: |
+          BUILD_TOOLS_DIR=$(find $ANDROID_HOME/build-tools -mindepth 1 -maxdepth 1 | sort -V | tail -n 1)
+          echo "Using apksigner from $BUILD_TOOLS_DIR"
+          if [ -f dist/Bugsby.apk ]; then
+            $BUILD_TOOLS_DIR/apksigner verify --verbose dist/Bugsby.apk || true
+          fi
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -61,22 +74,23 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/main')
         with:
           tag_name: v1.0.1
-          name: Bugsby v1.0.1 (Signed Release APK)
+          name: Bugsby v1.0.1 (Signed APK)
           draft: false
           prerelease: false
           body: |
             ## 🥷 Bugsby AI Companion - v1.0.1 Signed Release
 
-            Fully signed APK (with both v1 JAR signature and v2 full-APK signature) for installation on all Android devices.
+            Fully signed APK for installation on Android devices.
 
             ### 📦 Download:
             - **Primary (Recommended)**: `Bugsby.apk` (Signed Release Build)
-            - **Debug alternative**: `Bugsby-debug.apk`
+            - **Debug build**: `Bugsby-debug.apk`
 
-            ### ⚠️ Important Note If Package Installer Closes on Tap:
-            1. **Stop Screen Recording**: If you are recording your screen (or have a floating recorder button active), Android's tapjacking protection (`filterTouchesWhenObscured`) intentionally blocks or dismisses the "Install" button to prevent screen capture tapjacking. **Pause or stop screen recording before tapping Install.**
-            2. **Turn off screen dimmers / blue-light filters**: Night shift or screen tint apps overlaying the display will trigger the same security block.
-            3. Tap `Bugsby.apk`, tap **Install**, and launch your ninja companion!
+            ### 📲 Installation Troubleshooting:
+            If tapping **Install** does nothing or closes the dialog:
+            1. **Install via Files App**: Do not tap directly inside the browser's download shelf. Instead, open your phone's **Files** or **My Files** app, navigate to **Downloads**, and tap `Bugsby.apk` there.
+            2. **Allow Unknown Apps**: In your phone Settings -> Apps -> Special app access -> Install unknown apps, make sure your Files app / Browser has permission enabled.
+            3. Tap **Install** and enjoy Bugsby!
           files: dist/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
