@@ -1,0 +1,68 @@
+name: Build Bugsby APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bugsby-APK
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Release APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/heads/main')
+        with:
+          tag_name: v1.0.0
+          name: Bugsby v1.0.0 (Phase 1 APK)
+          draft: false
+          prerelease: false
+          body: |
+            ## 🥷 Bugsby AI Companion - Phase 1 Build
+            
+            Installable APK for your Android phone!
+            
+            ### ✨ Features Included:
+            - **Floating 2D Ninja Overlay** (`SYSTEM_ALERT_WINDOW`): Floats over your phone's apps, fully draggable.
+            - **Idle Hide-in-Shadows**: Automatically tucks into the screen edge and dims to 35% opacity after 10s of inactivity. Wakes immediately on tap!
+            - **Super Saiyan Evolve Mode**: Say **"evolve"** or tap the bolt icon on Bugsby's menu to trigger a full Super Saiyan transformation with golden blazing aura, electric lightning arcs, glowing eyes, and 3D illuminated depth! Say **"normal"** to return to base ninja form.
+            - **Smooth Expressions & Animations**: Breathing bob, idle blinking, and reaction states.
+            - **Voice & Brain Router**: Voice commands to open apps, search the web, play music on YouTube/Spotify, toggle flashlight, and optional Gemini AI free cloud chat.
+            
+            ### 📲 How to Install on your Android Phone:
+            1. Download the `app-debug.apk` attached below.
+            2. When opening, if Android asks, tap **Settings** -> **Allow from this source**.
+            3. Tap **Install**.
+            4. Open **Bugsby**, tap **Grant** for *Display over other apps* and *Microphone*.
+            5. Tap **Start Bugsby**!
+          files: app/build/outputs/apk/debug/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
