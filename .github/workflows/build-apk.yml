@@ -28,7 +28,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Generate Release Keystore
+      - name: Generate Keystore
         run: |
           keytool -genkeypair -v \
             -keystore app/release.keystore \
@@ -40,28 +40,34 @@ jobs:
             -keypass bugsby123 \
             -dname "CN=Bugsby, OU=Companion, O=Bugsby, L=Android, S=Global, C=US"
 
-      - name: Build Signed Release and Debug APKs
+      - name: Build APKs
         run: ./gradlew assembleRelease assembleDebug --stacktrace
 
       - name: Prepare APK Deliverables
         run: |
           mkdir -p dist
-          find app/build/outputs/apk -name "*.apk" -ls
-          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
-            cp app/build/outputs/apk/release/app-release.apk dist/Bugsby.apk
-          fi
-          if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
-            cp app/build/outputs/apk/debug/app-debug.apk dist/Bugsby-debug.apk
-          fi
+          cp app/build/outputs/apk/release/app-release.apk dist/Bugsby.apk
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Bugsby-debug.apk
           ls -lh dist/
 
-      - name: Verify APK Signatures
+      - name: Force Full Dual v1 + v2 Signing with apksigner
         run: |
           BUILD_TOOLS_DIR=$(find $ANDROID_HOME/build-tools -mindepth 1 -maxdepth 1 | sort -V | tail -n 1)
           echo "Using apksigner from $BUILD_TOOLS_DIR"
-          if [ -f dist/Bugsby.apk ]; then
-            $BUILD_TOOLS_DIR/apksigner verify --verbose dist/Bugsby.apk || true
-          fi
+          
+          # Re-sign release APK to guarantee v1 JAR + v2 APK signature schemes
+          $BUILD_TOOLS_DIR/apksigner sign \
+            --ks app/release.keystore \
+            --ks-key-alias bugsby \
+            --ks-pass pass:bugsby123 \
+            --key-pass pass:bugsby123 \
+            --min-sdk-version 24 \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            dist/Bugsby.apk
+
+          echo "=== Verifying Bugsby.apk Signatures ==="
+          $BUILD_TOOLS_DIR/apksigner verify --verbose dist/Bugsby.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -73,24 +79,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.0.1
-          name: Bugsby v1.0.1 (Signed APK)
+          tag_name: v1.0.2
+          name: Bugsby v1.0.2 (Dual v1+v2 Signed APK)
           draft: false
           prerelease: false
           body: |
-            ## 🥷 Bugsby AI Companion - v1.0.1 Signed Release
+            ## 🥷 Bugsby AI Companion - v1.0.2 Release
 
-            Fully signed APK for installation on Android devices.
+            Dual-signed APK (v1 JAR signature + v2 APK Signature Scheme) verified with Android `apksigner`.
 
-            ### 📦 Download:
-            - **Primary (Recommended)**: `Bugsby.apk` (Signed Release Build)
-            - **Debug build**: `Bugsby-debug.apk`
+            ### 📦 Download Links:
+            - **Primary Recommended**: `Bugsby.apk` (Signed Release Build)
+            - **Debug alternative**: `Bugsby-debug.apk`
 
-            ### 📲 Installation Troubleshooting:
-            If tapping **Install** does nothing or closes the dialog:
-            1. **Install via Files App**: Do not tap directly inside the browser's download shelf. Instead, open your phone's **Files** or **My Files** app, navigate to **Downloads**, and tap `Bugsby.apk` there.
-            2. **Allow Unknown Apps**: In your phone Settings -> Apps -> Special app access -> Install unknown apps, make sure your Files app / Browser has permission enabled.
-            3. Tap **Install** and enjoy Bugsby!
+            ### 📲 How to Install:
+            1. Download `Bugsby.apk`.
+            2. Open your phone's **Files** or **File Manager** app -> open **Downloads** folder -> tap `Bugsby.apk`.
+            3. Tap **Install** and launch Bugsby!
           files: dist/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
