@@ -55,7 +55,7 @@ class BrainRouter(private val context: Context) {
         }
 
         if (input.startsWith("search ") || input.startsWith("google ")) {
-            val query = input.replaceFirst("^(search|google)\s+".toRegex(), "")
+            val query = input.replaceFirst("^(search|google)\\s+".toRegex(), "")
             deviceActions.searchWeb(query)
             return@withContext Decision("Searching for $query.")
         }
@@ -129,7 +129,7 @@ class BrainRouter(private val context: Context) {
                 val parts = first.getJSONObject("content").getJSONArray("parts")
                 parts.getJSONObject(0).getString("text").trim()
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             null
         }
     }
