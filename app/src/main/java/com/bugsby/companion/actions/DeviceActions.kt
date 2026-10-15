@@ -48,7 +48,7 @@ class DeviceActions(private val context: Context) {
             val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             val cameraId = cameraManager.cameraIdList[0]
             cameraManager.setTorchMode(cameraId, enable)
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     fun openAlarms() {
